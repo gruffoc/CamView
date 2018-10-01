@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <iostream>
 #include <QMediaService>
 #include <QMediaRecorder>
 #include <QCameraViewfinder>
@@ -11,14 +12,14 @@
 #include <QPalette>
 
 #include <stdint.h>
-
+#include <unistd.h>
 
 #include <QtWidgets>
 
 
 Q_DECLARE_METATYPE(QCameraInfo)
 
-int i=1;
+//int i=1;
 
 MainWindow::MainWindow() : ui(new Ui::MainWindow)
 {
@@ -76,11 +77,24 @@ void MainWindow::stopCamera()
 
 void MainWindow::cicloImmagini()
 {
+
+    /*Attenzione al punto in cui viene definito l'iteratore i
+      l'hai messo come variabile globale, queusto fa si che si possano
+      creare dei refusi. Per i cicli, usa delle variabili locali che
+      hanno uno scope solo all'interno del ciclo*/
+
     ui->startAcquisitionButton->setText("Acquisition Started");
     QString NumberFrame = ui->NumberFrameText->toPlainText();
     QString filePath = ui->plainTextEdit->toPlainText();
 
-    while ( i < NumberFrame.toInt()){
+    for(int i=0; i<NumberFrame.toInt();i++){
+        displayCapturedImage();
+        m_imageCapture->capture(filePath+QString::number(i));
+        sleep(1);
+        std::cout<<i<<"\n";
+    }
+
+    /*while ( i < NumberFrame.toInt()){
 
         ui-> NumericText->setText(QString::number(i));
 
@@ -90,16 +104,17 @@ void MainWindow::cicloImmagini()
 
         i=i+1;
 
-    }
+    }*/
+
 
 
 
     m_isCapturingImage = false;
     ui->startAcquisitionButton->setText("Acquisition");
-    i=1;
+    //i=1;
     ui-> NumericText->setText("0");
     if (m_applicationExiting)
-       close();
+       close(); //?? Questo non lo capisco...
 
 }
 
@@ -107,7 +122,8 @@ void MainWindow::processCapturedImage(int requestId)
 {
     Q_UNUSED(requestId);
 
-
+    //Qui succede qualcosa di strano, molto strano..... non capisco bene l'azione del timer
+    //
     //If FrameRate=1, the display captured image for 1/1000 seconds.
     displayCapturedImage();
 
@@ -122,7 +138,7 @@ void MainWindow::takeImage()
     QString filePath = ui->plainTextEdit->toPlainText();
 
     m_isCapturingImage = true;
-    m_imageCapture->capture(filePath);
+    m_imageCapture->capture(filePath); // alla fine è questo il vero capture, no?
 
 
 }
@@ -134,7 +150,7 @@ void MainWindow::imageSaved(int id,  const QString &filePath)
     ui->statusBar->showMessage(tr("Captured \"%1\"").arg(QDir::toNativeSeparators(filePath)));
     m_isCapturingImage = false;
     if (m_applicationExiting)
-       close();
+       close(); // questo non mi è chiaro per nulla .....
 
 
     //QString NumberFrame = ui->NumberFrameText->toPlainText();
