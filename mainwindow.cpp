@@ -15,6 +15,8 @@
 #include <unistd.h>
 
 #include <QtWidgets>
+#include <QMessageBox>
+#include <QDebug>
 
 
 Q_DECLARE_METATYPE(QCameraInfo)
@@ -54,6 +56,7 @@ void MainWindow::setCamera(const QCameraInfo &cameraInfo)
 
     m_camera->setViewfinder(ui->viewfinder);
 
+    m_camera->setCaptureMode(QCamera::CaptureStillImage);
 
   // connect(m_imageCapture.data(), &QCameraImageCapture::imageCaptured, this, &MainWindow::processCapturedImage);
   // connect(m_imageCapture.data(), &QCameraImageCapture::imageSaved, this, &MainWindow::imageSaved);
@@ -86,12 +89,28 @@ void MainWindow::cicloImmagini()
     ui->startAcquisitionButton->setText("Acquisition Started");
     QString NumberFrame = ui->NumberFrameText->toPlainText();
     QString filePath = ui->plainTextEdit->toPlainText();
+    int i = 0;
 
-    for(int i=0; i<NumberFrame.toInt();i++){
-        displayCapturedImage();
+    while(i < NumberFrame.toInt() ){
+        //displayCapturedImage();
+        if(QCamera::UnavailableStatus != 0){
+        m_camera->searchAndLock();
+        QString s = (filePath+QString::number(i));
+
+        //QMessageBox::information(0,"prova",s);
+
         m_imageCapture->capture(filePath+QString::number(i));
-        sleep(1);
+
+        m_camera->unlock();
         std::cout<<i<<"\n";
+        i++;
+        }else{
+            continue;
+        }
+        //m_camera.reset(new QCamera(QCameraInfo::defaultCamera()));
+        //m_imageCapture.reset(new QCameraImageCapture(m_camera.data()));
+        //m_camera->setViewfinder(ui->viewfinder);
+
     }
 
     /*while ( i < NumberFrame.toInt()){
@@ -111,7 +130,7 @@ void MainWindow::cicloImmagini()
 
     m_isCapturingImage = false;
     ui->startAcquisitionButton->setText("Acquisition");
-    //i=1;
+    i=0;
     ui-> NumericText->setText("0");
     if (m_applicationExiting)
        close(); //?? Questo non lo capisco...
