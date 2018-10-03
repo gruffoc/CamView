@@ -106,7 +106,7 @@ void MainWindow::cicloImmagini()
 
     int i=1;
 
-    while(i < NumberFrame.toInt() ){
+    while(i <= NumberFrame.toInt() ){
         displayCapturedImage();
         ui->NumericText->setText(QString::number(i));
         m_isCapturingImage=true;
@@ -114,7 +114,7 @@ void MainWindow::cicloImmagini()
 
         std::cout<<i<<"\n";
 
-            if(QCamera::NoError){
+            if(QCameraImageCapture::NoError==0){
             m_camera->searchAndLock();
             //QString s = (filePath+QString::number(i));
 
