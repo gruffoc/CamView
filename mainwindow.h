@@ -25,8 +25,8 @@ private slots:
     void startCamera();
     void stopCamera();
 
-    void takeImage();
-    void imageSaved(int id,  const QString &filePath);
+    //void takeImage();
+    //void imageSaved(int id,  const QString &filePath);
 
     void processCapturedImage(int requestId);
 
@@ -36,6 +36,12 @@ private slots:
     void readyForCapture(bool ready);
 
     void cicloImmagini();
+
+    void updateCameraState(QCamera::State);
+
+
+    void displayCaptureError(int id, const QCameraImageCapture::Error error, const QString &errorString);
+    void displayCameraError();
 
 
 protected:

@@ -12,13 +12,14 @@
 
 #include <stdint.h>
 
-
 #include <QtWidgets>
 
+#include <unistd.h>
+#include <iostream>
 
 Q_DECLARE_METATYPE(QCameraInfo)
 
-int i=1;
+
 
 MainWindow::MainWindow() : ui(new Ui::MainWindow)
 {
@@ -47,15 +48,36 @@ MainWindow::MainWindow() : ui(new Ui::MainWindow)
 
 void MainWindow::setCamera(const QCameraInfo &cameraInfo)
 {
+
     m_camera.reset(new QCamera(cameraInfo));
+
+    connect(m_camera.data(), &QCamera::stateChanged, this, &MainWindow::updateCameraState);
+    connect(m_camera.data(), QOverload<QCamera::Error>::of(&QCamera::error), this, &MainWindow::displayCameraError);
 
     m_imageCapture.reset(new QCameraImageCapture(m_camera.data()));
 
     m_camera->setViewfinder(ui->viewfinder);
 
+    m_camera->setCaptureMode(QCamera::CaptureStillImage);
 
-  // connect(m_imageCapture.data(), &QCameraImageCapture::imageCaptured, this, &MainWindow::processCapturedImage);
-  // connect(m_imageCapture.data(), &QCameraImageCapture::imageSaved, this, &MainWindow::imageSaved);
+
+    //questo ti servirà
+    //connect(ui->exposureCompensation, &QAbstractSlider::valueChanged, this, &Camera::setExposureCompensation);
+
+
+    updateCameraState(m_camera->state());
+
+
+    connect(m_imageCapture.data(), &QCameraImageCapture::readyForCaptureChanged, this, &MainWindow::readyForCapture);
+    //connect(m_imageCapture.data(), &QCameraImageCapture::imageCaptured, this, &MainWindow::processCapturedImage);
+    //connect(m_imageCapture.data(), &QCameraImageCapture::imageSaved, this, &MainWindow::imageSaved);
+    connect(m_imageCapture.data(), QOverload<int, QCameraImageCapture::Error, const QString &>::of(&QCameraImageCapture::error),
+            this, &MainWindow::displayCaptureError);
+
+
+    ui->startAcquisitionButton->setEnabled((m_camera->isCaptureModeSupported(QCamera::CaptureStillImage)));
+
+
 }
 
 
@@ -71,36 +93,56 @@ void MainWindow::stopCamera()
     ui->startButton->setText("Start");
 }
 
-//aggiungere errore per frame rate=0
 
-
+//mi esce 'errore e la metà
 void MainWindow::cicloImmagini()
 {
     ui->startAcquisitionButton->setText("Acquisition Started");
     QString NumberFrame = ui->NumberFrameText->toPlainText();
     QString filePath = ui->plainTextEdit->toPlainText();
-
-    while ( i < NumberFrame.toInt()){
-
-        ui-> NumericText->setText(QString::number(i));
-
-        processCapturedImage(i);
-        takeImage();
-        imageSaved(i, filePath);
-
-        i=i+1;
-
-    }
+    QString FrameRate=ui->FrameRateText->toPlainText();
 
 
 
-    m_isCapturingImage = false;
-    ui->startAcquisitionButton->setText("Acquisition");
-    i=1;
-    ui-> NumericText->setText("0");
+    int i=1;
+
+    while(i < NumberFrame.toInt() ){
+        displayCapturedImage();
+        ui->NumericText->setText(QString::number(i));
+        m_isCapturingImage=true;
+        readyForCapture(i);
+
+        std::cout<<i<<"\n";
+
+            if(QCamera::NoError){
+            m_camera->searchAndLock();
+            //QString s = (filePath+QString::number(i));
+
+            //QMessageBox::information(0,"prova",s);
+
+            m_imageCapture->capture(filePath+QString::number(i));
+
+            QTimer::singleShot(FrameRate.toInt(), this, &MainWindow::displayViewfinder);
+
+            ui->statusBar->showMessage(tr("Captured \"%1\"").arg(QDir::toNativeSeparators(filePath)));
+            m_isCapturingImage=false;
+
+            m_camera->unlock();
+
+            i++;
+            }else{
+                continue;
+            }
+
+
+    ui->startAcquisitionButton->setText("Start Acquisition");
+
+
+    std::cout<<NumberFrame.toInt()<<"\n";
     if (m_applicationExiting)
-       close();
+      close();
 
+}
 }
 
 void MainWindow::processCapturedImage(int requestId)
@@ -117,47 +159,43 @@ void MainWindow::processCapturedImage(int requestId)
 }
 
 
-void MainWindow::takeImage()
+//void MainWindow::takeImage()
+//{
+//    QString filePath = ui->plainTextEdit->toPlainText();
+
+//    m_isCapturingImage = true;
+//    m_imageCapture->capture(filePath);
+
+
+//}
+
+//void MainWindow::imageSaved(int id,  const QString &filePath)
+//{
+//    Q_UNUSED(id);
+
+//    ui->statusBar->showMessage(tr("Captured \"%1\"").arg(QDir::toNativeSeparators(filePath)));
+//    m_isCapturingImage = false;
+//    if (m_applicationExiting)
+//       close();
+//}
+
+
+void MainWindow::updateCameraState(QCamera::State state)
 {
-    QString filePath = ui->plainTextEdit->toPlainText();
+    switch (state) {
+    case QCamera::ActiveState:
+        ui->startButton->setEnabled(false);
+        ui->stopButton->setEnabled(true);
+        ui->startAcquisitionButton->setEnabled(true);
 
-    m_isCapturingImage = true;
-    m_imageCapture->capture(filePath);
+        break;
+    case QCamera::UnloadedState:
+    case QCamera::LoadedState:
+        ui->startButton->setEnabled(true);
+        ui->stopButton->setEnabled(false);
+        ui->startAcquisitionButton->setEnabled(false);
 
-
-}
-
-void MainWindow::imageSaved(int id,  const QString &filePath)
-{
-    Q_UNUSED(id);
-
-    ui->statusBar->showMessage(tr("Captured \"%1\"").arg(QDir::toNativeSeparators(filePath)));
-    m_isCapturingImage = false;
-    if (m_applicationExiting)
-       close();
-
-
-    //QString NumberFrame = ui->NumberFrameText->toPlainText();
-
-
-
-//    if (i < NumberFrame.toInt()){
-
-//        processCapturedImage(i);
-
-//        takeImage();
-//        i=i+1;
-//        ui-> NumericText->setText(QString::number(i));
-//    }
-//    else {
-//        m_isCapturingImage = false;
-//        ui->startAcquisitionButton->setText("Acquisition");
-//        i=1;
-//        ui-> NumericText->setText("0");
-//        if (m_applicationExiting)
-//            close();
-//    }
-
+    }
 }
 
 
@@ -171,9 +209,23 @@ void MainWindow::displayCapturedImage()
     ui->stackedWidget->setCurrentIndex(1);
 }
 
+
 void MainWindow::readyForCapture(bool ready)
 {
     ui->startAcquisitionButton->setEnabled(ready);
 }
 
 
+void MainWindow::displayCaptureError(int id, const QCameraImageCapture::Error error, const QString &errorString)
+{
+    Q_UNUSED(id);
+    Q_UNUSED(error);
+    QMessageBox::warning(this, tr("Image Capture Error"), errorString);
+    m_isCapturingImage = false;
+}
+
+
+void MainWindow::displayCameraError()
+{
+    QMessageBox::warning(this, tr("Camera Error"), m_camera->errorString());
+}
