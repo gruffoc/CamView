@@ -16,6 +16,7 @@
 
 #include <unistd.h>
 #include <iostream>
+#include <cstdlib>
 
 Q_DECLARE_METATYPE(QCameraInfo)
 
@@ -48,7 +49,6 @@ MainWindow::MainWindow() : ui(new Ui::MainWindow)
 
 void MainWindow::setCamera(const QCameraInfo &cameraInfo)
 {
-
     m_camera.reset(new QCamera(cameraInfo));
 
     connect(m_camera.data(), &QCamera::stateChanged, this, &MainWindow::updateCameraState);
@@ -76,10 +76,7 @@ void MainWindow::setCamera(const QCameraInfo &cameraInfo)
 
 
     ui->startAcquisitionButton->setEnabled((m_camera->isCaptureModeSupported(QCamera::CaptureStillImage)));
-
-
 }
-
 
 void MainWindow::startCamera()
 {
@@ -93,21 +90,34 @@ void MainWindow::stopCamera()
     ui->startButton->setText("Start");
 }
 
-
-//mi esce 'errore e la metà
 void MainWindow::cicloImmagini()
 {
-    ui->startAcquisitionButton->setText("Acquisition Started");
     QString NumberFrame = ui->NumberFrameText->toPlainText();
     QString filePath = ui->plainTextEdit->toPlainText();
     QString FrameRate=ui->FrameRateText->toPlainText();
 
+    if (NumberFrame == ""){
+        QMessageBox::information(0,"Open File", "ERRORE!\n NumberFrame non settato - indicare un NumberFrame ");
+        return;
+        //stopCamera();
+    }
 
+    if (FrameRate  == ""){
+        QMessageBox::information(0,"Open File", "ERRORE!\n FrameRate non settato - indicare un FrameRate ");
+        return;
+        //stopCamera();
+    }
+
+    if (filePath  == ""){
+        QMessageBox::information(0,"Open File", "ERRORE!\n Impossibile trovare la path indicata ");
+        return;
+        //stopCamera();
+    }
 
     int i=1;
-
     while(i <= NumberFrame.toInt() ){
         displayCapturedImage();
+        ui->startAcquisitionButton->setText("Acquisition Started");
         ui->NumericText->setText(QString::number(i));
         m_isCapturingImage=true;
         readyForCapture(i);
@@ -137,12 +147,11 @@ void MainWindow::cicloImmagini()
 
     ui->startAcquisitionButton->setText("Start Acquisition");
 
-
     std::cout<<NumberFrame.toInt()<<"\n";
     if (m_applicationExiting)
       close();
 
-}
+    }
 }
 
 void MainWindow::processCapturedImage(int requestId)
@@ -190,6 +199,7 @@ void MainWindow::updateCameraState(QCamera::State state)
 
         break;
     case QCamera::UnloadedState:
+
     case QCamera::LoadedState:
         ui->startButton->setEnabled(true);
         ui->stopButton->setEnabled(false);
