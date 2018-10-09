@@ -54,7 +54,7 @@ MainWindow::MainWindow() : ui(new Ui::MainWindow)
 
     work_process->moveToThread(th2);
 
-    connect(th2,SIGNAL(started()),work_process,SLOT(do_someting()));
+    connect(th2,SIGNAL(started()),work_process,SLOT(do_something()));
     th2->start();
 
 
