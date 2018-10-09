@@ -48,11 +48,6 @@ private slots:
     void startCamera();
     void stopCamera();
 
-    //void takeImage();
-    //void imageSaved(int id,  const QString &filePath);
-
-    //void processCapturedImage(int requestId);
-
     void displayViewfinder();
     void displayCapturedImage();
 
@@ -67,15 +62,11 @@ private slots:
     void displayCaptureError(int id, const QCameraImageCapture::Error error, const QString &errorString);
     void displayCameraError();
 
-    //void format(const QSize &size, QImage::Format format);
-
     void setImage();
-
-    //qreal saturation() const;
 
     void select();
 
-
+    void change_label();
 
 
 protected:

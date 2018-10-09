@@ -13,6 +13,8 @@ public:
     explicit WaveformGraph();
     ~WaveformGraph();
 
+signals:
+    void change();
 
 public slots:
     void do_something();

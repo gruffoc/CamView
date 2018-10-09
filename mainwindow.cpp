@@ -48,7 +48,6 @@ MainWindow::MainWindow() : ui(new Ui::MainWindow)
 
     //setting up the measure thread
 
-
     th2 = new QThread();
     work_process = new WaveformGraph();
 
@@ -77,7 +76,10 @@ MainWindow::MainWindow() : ui(new Ui::MainWindow)
     connect(ui->startButton,SIGNAL(clicked()), this, SLOT(startCamera()));
     connect(ui->stopButton,SIGNAL(clicked()), this, SLOT(stopCamera()));
     connect(ui->startAcquisitionButton,SIGNAL(clicked()), this, SLOT(cicloImmagini()));
-    //connect(this,SLOT())
+
+    connect(this,SLOT(startCamera()),this,SLOT(change_label()));
+    //connect(th2,SIGNAL(change()),this,SLOT(change_label()));
+
 
     connect(ui->pushButton,SIGNAL(clicked()), this, SLOT(select()));
 }
@@ -86,17 +88,25 @@ void MainWindow::setCamera(const QCameraInfo &cameraInfo)
 {
     m_camera.reset(new QCamera(cameraInfo));
 
-    connect(m_camera.data(), &QCamera::stateChanged, this, &MainWindow::updateCameraState);
-    connect(m_camera.data(), QOverload<QCamera::Error>::of(&QCamera::error), this, &MainWindow::displayCameraError);
-
     m_imageCapture.reset(new QCameraImageCapture(m_camera.data()));
+
+    QImageEncoderSettings imageSettings;
+    //imageSettings.setCodec("image/png");
+
+    QString width=ui->widthText->toPlainText();
+    QString height=ui->heightText->toPlainText();
+    imageSettings.setResolution(width.toInt(), height.toInt());
+    m_imageCapture->setEncodingSettings(imageSettings);
+
+    connect(m_camera.data(), &QCamera::stateChanged, this, &MainWindow::updateCameraState);
+
+    connect(m_camera.data(), QOverload<QCamera::Error>::of(&QCamera::error), this, &MainWindow::displayCameraError);
 
     m_camera->setViewfinder(ui->viewfinder);
 
     m_camera->setCaptureMode(QCamera::CaptureStillImage);
 
     connect(ui->exposureCompensation, &QAbstractSlider::valueChanged, this, &MainWindow::setExposureCompensation);
-    //connect(ui->ImageFormatBox, &QAbstractSlider::valueChanged, this, &MainWindow::setImageFormat);
 
     updateCameraState(m_camera->state());
 
@@ -160,14 +170,8 @@ void MainWindow::cicloImmagini()
         std::cout<<i<<"\n";
 
             if(QCameraImageCapture::NoError==0){
+
             m_camera->searchAndLock();
-
-//            QImageEncoderSettings imageSettings;
-//            imageSettings.setCodec("image/png");
-//            imageSettings.setResolution(16, 12);
-
-//            m_imageCapture->setEncodingSettings(imageSettings);
-
 
             m_imageCapture->capture(filePath+ FileName + QString::number(i));
 
@@ -205,8 +209,6 @@ void MainWindow::setExposureCompensation(int index)
 
 }
 
-
-
 void MainWindow::setImage()
 {
     QImageEncoderSettings imageSettings;
@@ -214,47 +216,7 @@ void MainWindow::setImage()
     imageSettings.setResolution(1600, 1200);
 
     m_imageCapture->setEncodingSettings(imageSettings);
-
-    //QSize size(100, 10);
-
 }
-
-
-
-//void MainWindow::processCapturedImage(int requestId)
-//{
-//    Q_UNUSED(requestId);
-
-
-//    //If FrameRate=1, the display captured image for 1/1000 seconds.
-//    displayCapturedImage();
-
-//    QString FrameRate=ui->FrameRateText->toPlainText();
-
-//    QTimer::singleShot(FrameRate.toInt(), this, &MainWindow::displayViewfinder);
-//}
-
-
-//void MainWindow::takeImage()
-//{
-//    QString filePath = ui->plainTextEdit->toPlainText();
-
-//    m_isCapturingImage = true;
-//    m_imageCapture->capture(filePath);
-
-
-//}
-
-//void MainWindow::imageSaved(int id,  const QString &filePath)
-//{
-//    Q_UNUSED(id);
-
-//    ui->statusBar->showMessage(tr("Captured \"%1\"").arg(QDir::toNativeSeparators(filePath)));
-//    m_isCapturingImage = false;
-//    if (m_applicationExiting)
-//       close();
-//}
-
 
 void MainWindow::updateCameraState(QCamera::State state)
 {
@@ -271,10 +233,8 @@ void MainWindow::updateCameraState(QCamera::State state)
         ui->startButton->setEnabled(true);
         ui->stopButton->setEnabled(false);
         ui->startAcquisitionButton->setEnabled(false);
-
     }
 }
-
 
 void MainWindow::displayViewfinder()
 {
@@ -316,4 +276,9 @@ void MainWindow::select()
     ui->fileTextEdit->appendPlainText(directory);
 }
 
+
+void MainWindow::change_label()
+{
+    ui->label_9->setText("ciao");
+}
 

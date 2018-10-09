@@ -38,6 +38,9 @@ void WaveformGraph::do_something()
         std::cout << k << std::endl;
         std::cout << "coiao" << std::endl;
     }
+
+    emit change();
 }
+
 
 
