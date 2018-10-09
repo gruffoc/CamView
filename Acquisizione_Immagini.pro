@@ -5,8 +5,7 @@
 #-------------------------------------------------
 
 # QT       += core gui widgets
-QT += multimedia multimediawidgets
-
+QT += core gui widgets multimedia multimediawidgets charts
 TARGET = Acquisizione_Immagini
 TEMPLATE = app
 
@@ -25,10 +24,12 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    waveformgraph.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    waveformgraph.h
 
 FORMS += \
         mainwindow.ui

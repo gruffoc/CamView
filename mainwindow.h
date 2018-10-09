@@ -3,10 +3,18 @@
 
 #include <QCamera>
 #include <QCameraImageCapture>
+#include <QImageEncoderSettings>
 #include <QMediaRecorder>
 #include <QScopedPointer>
+#include <QImage>
+#include <QImage>
+#include <QCameraImageProcessing>
+#include <QCameraImageProcessingControl>
 
 #include <QMainWindow>
+
+class QComboBox;
+
 
 namespace Ui {
 class MainWindow;
@@ -15,6 +23,21 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+
+//    ColorGradient {
+//        id: surfaceGradient
+//        ColorGradientStop { position: 0.0; color: "black" }
+//        ColorGradientStop { position: 0.2; color: "red" }
+//        ColorGradientStop { position: 0.5; color: "blue" }
+//        ColorGradientStop { position: 0.8; color: "yellow" }
+//        ColorGradientStop { position: 1.0; color: "white" }
+//    }
+
+//    QMenuBar {
+//        background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+//                                          stop:0 lightgray, stop:1 darkgray);
+//    }
+
 
 public:
     MainWindow();
@@ -28,7 +51,7 @@ private slots:
     //void takeImage();
     //void imageSaved(int id,  const QString &filePath);
 
-    void processCapturedImage(int requestId);
+    //void processCapturedImage(int requestId);
 
     void displayViewfinder();
     void displayCapturedImage();
@@ -39,28 +62,39 @@ private slots:
 
     void updateCameraState(QCamera::State);
 
+    void setExposureCompensation(int index);
 
     void displayCaptureError(int id, const QCameraImageCapture::Error error, const QString &errorString);
     void displayCameraError();
 
+    //void format(const QSize &size, QImage::Format format);
+
+    void setImage();
+
+    //qreal saturation() const;
+
+    void select();
+
+
+
 
 protected:
 
-   // void closeEvent(QCloseEvent *event);
 
 private:
+
+
+
     Ui::MainWindow *ui;
 
     QScopedPointer<QCamera> m_camera; //Puntatore alla classe Qcamera che :Construct a QCamera with a parent.
     QScopedPointer<QCameraImageCapture> m_imageCapture;
-    QScopedPointer<QMediaRecorder> m_mediaRecorder;
-
     QImageEncoderSettings m_imageSettings;
-    QAudioEncoderSettings m_audioSettings;
-    QVideoEncoderSettings m_videoSettings;
     QString m_videoContainerFormat;
     bool m_isCapturingImage = false;
     bool m_applicationExiting = false;
+
+
 
 
 
